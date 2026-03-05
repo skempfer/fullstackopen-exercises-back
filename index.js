@@ -70,36 +70,19 @@ app.delete('/api/persons/:id', (req, res) => {
 })
 
 app.post('/api/persons', (req, res) => {
-  const body = req.body
+  const person = new Person(req.body)
 
-  if (!body.name || !body.number) {
-    return res.status(400).json({
-      error: 'name or number missing'
+  person.save()
+    .then(savedPerson => {
+      res.json(savedPerson)
     })
-  }
+    .catch(error => {
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message })
+      }
 
-  Person.findOne({ name: body.name }).then(existingPerson => {
-    if (existingPerson) {
-      return res.status(400).json({
-        error: 'name must be unique'
-      })
-    }
-
-    const person = new Person({
-      name: body.name,
-      number: body.number
+      res.status(400).json({ error: 'something went wrong' })
     })
-
-    return person.save()
-  }).then(savedPerson => {
-    res.json(savedPerson)
-  }).catch(error => {
-     if (error.name === 'MongoServerError' && error.code === 11000) {
-      return res.status(400).json({ error: 'name must be unique' })
-    }
-
-    res.status(400).json({ error: error.message })
-  })
 })
 
 app.use((req, res) => {
