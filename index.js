@@ -84,6 +84,28 @@ app.post('/api/persons', (req, res) => {
       res.status(400).json({ error: 'something went wrong' })
     })
 })
+app.put('/api/persons/:id', (req, res) => {
+  const { name, number } = req.body
+
+  Person.findByIdAndUpdate(
+    req.params.id,
+    { name, number },
+    {
+      new: true,
+      runValidators: true,
+      context: 'query'
+    }
+  )
+    .then(updatedPerson => {
+      res.json(updatedPerson)
+    })
+    .catch(error => {
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message })
+      }
+      res.status(400).json({ error: 'update failed' })
+    })
+})
 
 app.use((req, res) => {
   res.status(404).send({ error: 'unknown endpoint' })
