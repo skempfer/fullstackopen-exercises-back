@@ -1,7 +1,19 @@
+const morgan = require('morgan')
 const express = require('express')
 const app = express()
 
 app.use(express.json())
+app.use(morgan('tiny'))
+
+morgan.token('body', (req) => {
+  return req.method === 'POST' ? JSON.stringify(req.body) : ''
+})
+
+app.use(
+  morgan(
+    ':method :url :status :res[content-length] - :response-time ms :body'
+  )
+)
 
 const PORT = 3001
 
@@ -72,6 +84,20 @@ app.post('/api/persons', (req, res) => {
   persons = persons.concat(newPerson)
 
   res.json(newPerson)
+})
+
+app.use((req, res) => {
+  res.status(404).send({ error: 'unknown endpoint' })
+})
+
+app.use((err, req, res, next) => {
+  console.error(err.message)
+
+  if (err.name === 'SyntaxError') {
+    return res.status(400).json({ error: 'malformatted JSON' })
+  }
+
+  next(err)
 })
 
 app.listen(PORT, () => {
