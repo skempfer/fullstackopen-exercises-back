@@ -31,13 +31,13 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('connected to MongoDB'))
   .catch(err => console.error('error connecting to MongoDB:', err));
 
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (req, res, next) => {
   Person.find({}).then(persons => {
     res.json(persons)
-  })
+  }).catch(error => next(error))
 })
 
-app.get('/info', (req, res) => {
+app.get('/info', (req, res, next) => {
   Person.countDocuments({}).then(count => {
     const total = count
     const date = new Date()
@@ -46,45 +46,36 @@ app.get('/info', (req, res) => {
       <p>Phonebook has info for ${total} people</p>
       <p>${date}</p>
     `)
-  })
+  }).catch(error => next(error))
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
   Person.findById(req.params.id).then(person => {
     if (person) {
       res.json(person)
     } else {
       res.status(404).end()
     }
-  }).catch(error => {
-    res.status(400).send({ error: 'malformatted id' })
-  })
+  }).catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndDelete(req.params.id).then(() => {
     res.status(204).end()
-  }).catch(error => {
-    res.status(400).send({ error: 'malformatted id' })
-  })
+  }).catch(error => next(error))
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const person = new Person(req.body)
 
   person.save()
     .then(savedPerson => {
       res.json(savedPerson)
     })
-    .catch(error => {
-      if (error.name === 'ValidationError') {
-        return res.status(400).json({ error: error.message })
-      }
-
-      res.status(400).json({ error: 'something went wrong' })
-    })
+    .catch(error => next(error))
 })
-app.put('/api/persons/:id', (req, res) => {
+
+app.put('/api/persons/:id', (req, res, next) => {
   const { name, number } = req.body
 
   Person.findByIdAndUpdate(
@@ -99,13 +90,22 @@ app.put('/api/persons/:id', (req, res) => {
     .then(updatedPerson => {
       res.json(updatedPerson)
     })
-    .catch(error => {
-      if (error.name === 'ValidationError') {
-        return res.status(400).json({ error: error.message })
-      }
-      res.status(400).json({ error: 'update failed' })
-    })
+    .catch(error => next(error))
 })
+
+const errorHandler = (error, req, res, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return res.status(400).send({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+    return res.status(400).json({ error: error.message })
+  }
+
+  next(error)
+}
+
+app.use(errorHandler)
 
 app.use((req, res) => {
   res.status(404).send({ error: 'unknown endpoint' })
