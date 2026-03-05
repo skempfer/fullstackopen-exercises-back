@@ -15,7 +15,7 @@ app.use(
   )
 )
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 
 let persons = [
   { id: 1, name: "Arto Hellas", number: "040-123456" },
