@@ -3,6 +3,9 @@ const cors = require('cors')
 const app = express()
 const morgan = require('morgan')
 
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'build')));
+
 app.use(cors())
 
 app.use(express.json())
@@ -26,6 +29,10 @@ let persons = [
   { id: 3, name: "Dan Abramov", number: "12-43-234345" },
   { id: 4, name: "Mary Poppendieck", number: "39-23-6423122" }
 ]
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 app.get('/api/persons', (req, res) => {
   res.json(persons)
