@@ -18,6 +18,15 @@ const blogs = [
   }
 ]
 
+test('author with most blogs', () => {
+  const result = listHelper.mostBlogs(blogs)
+
+  expect(result).toEqual({
+    author: "Edsger Dijkstra",
+    blogs: 2
+  })
+})
+
 test('favorite blog', () => {
   const result = listHelper.favoriteBlog(blogs)
 
