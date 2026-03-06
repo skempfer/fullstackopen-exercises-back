@@ -10,11 +10,22 @@ const blogs = [
     title: "Go To Statement Considered Harmful",
     author: "Edsger Dijkstra",
     likes: 5
+  },
+  {
+    title: "Canonical string reduction",
+    author: "Edsger Dijkstra",
+    likes: 12
   }
 ]
 
-test('total likes of two blogs', () => {
+test('favorite blog', () => {
+  const result = listHelper.favoriteBlog(blogs)
+
+  expect(result.title).toBe("Canonical string reduction")
+})
+
+test('total likes of all blogs', () => {
   const result = listHelper.totalLikes(blogs)
 
-  expect(result).toBe(12)
+  expect(result).toBe(24)
 })
