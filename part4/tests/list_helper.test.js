@@ -35,27 +35,6 @@ describe('favorite blog', () => {
     })
   })
 
-  test('author with most likes', () => {
-  const result = listHelper.mostLikes(blogs)
-
-  expect(result).toEqual({
-    author: "Edsger W. Dijkstra",
-    likes: 17
-  })
-})
-
-test('favorite blog', () => {
-  const result = listHelper.favoriteBlog(blogs)
-
-  expect(result.title).toBe("Canonical string reduction")
-})
-
-test('total likes of all blogs', () => {
-  const result = listHelper.totalLikes(blogs)
-
-  expect(result).toBe(24)
-})
-
 })
 
 describe('most blogs', () => {
@@ -69,4 +48,29 @@ describe('most blogs', () => {
     })
   })
 
+})
+
+describe('most likes', () => {
+    
+  test('author with most likes', () => {
+    const result = listHelper.mostLikes(blogs)
+
+    expect(result).toEqual({
+      author: "Edsger W. Dijkstra",
+      likes: 17
+    })
+  })
+
+})
+
+test('favorite blog', () => {
+  const result = listHelper.favoriteBlog(blogs)
+
+  expect(result.title).toBe("Canonical string reduction")
+})
+
+test('total likes of all blogs', () => {
+  const result = listHelper.totalLikes(blogs)
+
+  expect(result).toBe(24)
 })
