@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "lint": "eslint index.js models/**/*.js",
+    "lint-fix": "eslint --fix index.js models/**/*.js"
   },
   "keywords": [],
   "author": "",
@@ -20,5 +22,10 @@
   },
   "engines": {
     "node": "18.x"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.2",
+    "globals": "^17.4.0"
   }
 }
