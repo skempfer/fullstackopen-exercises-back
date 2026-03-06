@@ -1,9 +1,20 @@
 const listHelper = require('../utils/list_helper')
 
-test('dummy returns one', () => {
-  const blogs = []
+const blogs = [
+  {
+    title: "React patterns",
+    author: "Michael Chan",
+    likes: 7
+  },
+  {
+    title: "Go To Statement Considered Harmful",
+    author: "Edsger Dijkstra",
+    likes: 5
+  }
+]
 
-  const result = listHelper.dummy(blogs)
+test('total likes of two blogs', () => {
+  const result = listHelper.totalLikes(blogs)
 
-  expect(result).toBe(1)
+  expect(result).toBe(12)
 })
