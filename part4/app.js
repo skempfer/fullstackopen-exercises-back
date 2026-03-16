@@ -1,6 +1,6 @@
 const express = require('express')
 const cors = require('cors')
-const blogsRouter = require('./controllers/blogs')
+const blogsRouter = require('./controllers/blog')
 
 const app = express()
 
