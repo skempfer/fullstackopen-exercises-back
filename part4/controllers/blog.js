@@ -1,6 +1,5 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
-const jwt = require('jsonwebtoken')
 const User = require('../models/users')
 const { userExtractor } = require('../utils/middleware')
 
@@ -9,16 +8,14 @@ blogsRouter.get('/', async (req, res) => {
   res.json(blogs)
 })
 
-blogsRouter.post('/', userExtractor, async (request, response) => {
+blogsRouter.post('/', userExtractor, async (request, response, next) => {
   const body = request.body
 
-  const decodedToken = request.user
+  const user = request.user
 
-  if (!decodedToken.id) {
+  if (!user || !user.id) {
     return response.status(401).json({ error: 'token missing or invalid' })
   }
-
-  const user = await User.findById(decodedToken.id)
 
   if (!user) {
     return response.status(401).json({ error: 'token invalid' })
@@ -37,15 +34,15 @@ blogsRouter.post('/', userExtractor, async (request, response) => {
 
     response.status(201).json(savedBlog)
   } catch (error) {
-    response.status(400).json({ error: error.message })
+    next(error)
   }
 })
 
-blogsRouter.delete('/:id', userExtractor, async (request, response) => {
+blogsRouter.delete('/:id', userExtractor, async (request, response, next) => {
   try {
-    const decodedToken = request.user
+    const user = request.user
 
-    if (!decodedToken.id) {
+    if (!user || !user.id) {
       return response.status(401).json({ error: 'token missing or invalid' })
     }
 
@@ -55,34 +52,38 @@ blogsRouter.delete('/:id', userExtractor, async (request, response) => {
       return response.status(404).end()
     }
 
-    if (!blog.user || blog.user.toString() !== decodedToken.id) {
+    if (!blog.user || blog.user.toString() !== user.id.toString()) {
       return response.status(401).json({ error: 'unauthorized' })
     }
 
     await Blog.findByIdAndDelete(request.params.id)
     response.status(204).end()
   } catch (error) {
-    response.status(400).json({ error: 'malformatted id' })
+    next(error)
   }
 })
 
-blogsRouter.put('/:id', async (request, response) => {
-  const { title, author, url, likes } = request.body
+blogsRouter.put('/:id', async (request, response, next) => {
+  try {
+    const { title, author, url, likes } = request.body
 
-  const blog = {
-    title,
-    author,
-    url,
-    likes
+    const blog = {
+      title,
+      author,
+      url,
+      likes
+    }
+
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      request.params.id,
+      blog,
+      { returnDocument: 'after', runValidators: true, context: 'query' }
+    )
+
+    response.json(updatedBlog)
+  } catch (error) {
+    next(error)
   }
-
-  const updatedBlog = await Blog.findByIdAndUpdate(
-    request.params.id,
-    blog,
-    { new: true, runValidators: true, context: 'query' }
-  )
-
-  response.json(updatedBlog)
 })
 
 

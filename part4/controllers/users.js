@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt')
 const usersRouter = require('express').Router()
 const User = require('../models/users')
 
-usersRouter.post('/', async (request, response) => {
+usersRouter.post('/', async (request, response, next) => {
   const { username, name, password } = request.body
 
   if (!password || password.length < 3) {
@@ -25,13 +25,7 @@ usersRouter.post('/', async (request, response) => {
 
     response.status(201).json(savedUser)
   } catch (error) {
-    if (error.name === 'MongoServerError' && error.code === 11000) {
-      return response.status(400).json({
-        error: 'username must be unique'
-      })
-    }
-
-    response.status(400).json({ error: error.message })
+    next(error)
   }
 })
 
