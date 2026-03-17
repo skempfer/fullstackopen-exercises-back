@@ -199,11 +199,23 @@ test('invalid blog is not saved', async () => {
 })
 
 test('a blog can be deleted', async () => {
+  const createdBlog = await api
+    .post('/api/blogs')
+    .set('Authorization', `Bearer ${authToken}`)
+    .send({
+      title: 'Delete me',
+      author: 'Shana',
+      url: 'https://example.com/delete',
+      likes: 0
+    })
+    .expect(201)
+
   const blogsAtStart = await Blog.find({})
-  const blogToDelete = blogsAtStart[0]
+  const blogToDelete = createdBlog.body
 
   await api
     .delete(`/api/blogs/${blogToDelete.id}`)
+    .set('Authorization', `Bearer ${authToken}`)
     .expect(204)
 
   const blogsAtEnd = await Blog.find({})
@@ -217,6 +229,7 @@ test('a blog can be deleted', async () => {
 test('returns 400 for invalid id', async () => {
   await api
     .delete('/api/blogs/123invalid')
+    .set('Authorization', `Bearer ${authToken}`)
     .expect(400)
 })
 
@@ -276,6 +289,55 @@ test('blog is not added without token', async () => {
   await api
     .post('/api/blogs')
     .send(newBlog)
+    .expect(401)
+})
+
+test('creator can delete a blog', async () => {
+  const createdBlog = await api
+    .post('/api/blogs')
+    .set('Authorization', `Bearer ${authToken}`)
+    .send({
+      title: 'Owned blog',
+      author: 'Shana',
+      url: 'https://example.com/owned',
+      likes: 1
+    })
+    .expect(201)
+
+  await api
+    .delete(`/api/blogs/${createdBlog.body.id}`)
+    .set('Authorization', `Bearer ${authToken}`)
+    .expect(204)
+})
+
+test('other user cannot delete blog', async () => {
+  const createdBlog = await api
+    .post('/api/blogs')
+    .set('Authorization', `Bearer ${authToken}`)
+    .send({
+      title: 'Protected blog',
+      author: 'Shana',
+      url: 'https://example.com/protected',
+      likes: 1
+    })
+    .expect(201)
+
+  await api.post('/api/users').send({
+    username: 'other',
+    name: 'Other',
+    password: '123456'
+  })
+
+  const login = await api.post('/api/login').send({
+    username: 'other',
+    password: '123456'
+  })
+
+  const token = login.body.token
+
+  await api
+    .delete(`/api/blogs/${createdBlog.body.id}`)
+    .set('Authorization', `Bearer ${token}`)
     .expect(401)
 })
 
