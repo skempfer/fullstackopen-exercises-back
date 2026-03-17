@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const { MongoMemoryServer } = require('mongodb-memory-server')
 const supertest = require('supertest')
 const User = require('../models/users')
+const Blog = require('../models/blog')
 
 let mongoServer
 let api
@@ -18,6 +19,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await User.deleteMany({})
+  await Blog.deleteMany({})
 })
 
 test('a new user can be created', async () => {
@@ -97,6 +99,58 @@ test('invalid user is not saved', async () => {
   const usersAtEnd = await User.find({})
 
   expect(usersAtEnd).toHaveLength(usersAtStart.length)
+})
+
+test('users include their blogs', async () => {
+  await api.post('/api/users').send({
+    username: 'withblogs',
+    name: 'With Blogs',
+    password: '123456'
+  })
+
+  const response = await api.get('/api/users')
+
+  const user = response.body[0]
+
+  expect(user.blogs).toBeDefined()
+  expect(Array.isArray(user.blogs)).toBe(true)
+
+  if (user.blogs.length > 0) {
+    expect(user.blogs[0].title).toBeDefined()
+  }
+})
+
+test('blogs contain only selected fields', async () => {
+  const createdUser = await api
+    .post('/api/users')
+    .send({
+      username: 'blogowner',
+      name: 'Blog Owner',
+      password: '123456'
+    })
+    .expect(201)
+
+  const createdBlog = await Blog.create({
+    title: 'User blog',
+    author: 'Blog Owner',
+    url: 'https://example.com/user-blog',
+    likes: 42,
+    user: createdUser.body.id
+  })
+
+  await User.findByIdAndUpdate(createdUser.body.id, {
+    $push: { blogs: createdBlog._id }
+  })
+
+  const response = await api.get('/api/users')
+
+  const blog = response.body[0].blogs[0]
+
+  expect(blog.url).toBeDefined()
+  expect(blog.title).toBeDefined()
+  expect(blog.author).toBeDefined()
+
+  expect(blog.likes).toBeUndefined()
 })
 
 afterAll(async () => {
