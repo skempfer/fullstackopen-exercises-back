@@ -113,6 +113,21 @@ test('blog count increases', async () => {
   expect(finalBlogs).toHaveLength(initialBlogs.length + 1)
 })
 
+test('if likes is missing, it defaults to 0', async () => {
+  const newBlog = {
+    title: 'No likes blog',
+    author: 'Shana',
+    url: 'https://example.com'
+  }
+
+  const response = await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(201)
+
+  expect(response.body.likes).toBe(0)
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 
