@@ -52,6 +52,53 @@ test('password is not returned', async () => {
   expect(user.passwordHash).toBeUndefined()
 })
 
+test('username must be at least 3 characters', async () => {
+  const newUser = {
+    username: 'ab',
+    name: 'Test',
+    password: '12345'
+  }
+
+  await api.post('/api/users').send(newUser).expect(400)
+})
+
+test('password must be at least 3 characters', async () => {
+  const newUser = {
+    username: 'validuser',
+    name: 'Test',
+    password: '12'
+  }
+
+  await api.post('/api/users').send(newUser).expect(400)
+})
+
+test('username must be unique', async () => {
+  const user = {
+    username: 'shana',
+    name: 'Shana',
+    password: '123456'
+  }
+
+  await api.post('/api/users').send(user)
+
+  await api.post('/api/users').send(user).expect(400)
+})
+
+test('invalid user is not saved', async () => {
+  const usersAtStart = await User.find({})
+
+  const newUser = {
+    username: 'ab',
+    password: '12'
+  }
+
+  await api.post('/api/users').send(newUser).expect(400)
+
+  const usersAtEnd = await User.find({})
+
+  expect(usersAtEnd).toHaveLength(usersAtStart.length)
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 
