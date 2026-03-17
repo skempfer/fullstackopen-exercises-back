@@ -128,6 +128,46 @@ test('if likes is missing, it defaults to 0', async () => {
   expect(response.body.likes).toBe(0)
 })
 
+test('blog without title is not added', async () => {
+  const newBlog = {
+    author: 'Shana',
+    url: 'https://example.com',
+    likes: 5
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(400)
+})
+
+test('blog without url is not added', async () => {
+  const newBlog = {
+    title: 'No url blog',
+    author: 'Shana',
+    likes: 5
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(400)
+})
+
+test('invalid blog is not saved', async () => {
+  const initialBlogs = await Blog.find({})
+
+  const newBlog = {
+    author: 'Shana'
+  }
+
+  await api.post('/api/blogs').send(newBlog).expect(400)
+
+  const finalBlogs = await Blog.find({})
+
+  expect(finalBlogs).toHaveLength(initialBlogs.length)
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 
