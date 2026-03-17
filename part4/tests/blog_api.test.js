@@ -64,6 +64,55 @@ test('blogs have id property', async () => {
   expect(blog.id).toBeDefined()
 })
 
+test('a valid blog can be added', async () => {
+  const newBlog = {
+    title: 'Test blog',
+    author: 'Shana Dev',
+    url: 'https://example.com',
+    likes: 10
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(201)
+    .expect('Content-Type', /application\/json/)
+})
+
+test('blog is actually saved in database', async () => {
+  const newBlog = {
+    title: 'Another blog',
+    author: 'Shana Dev',
+    url: 'https://example.com',
+    likes: 5
+  }
+
+  await api.post('/api/blogs').send(newBlog)
+
+  const blogs = await Blog.find({})
+
+  const titles = blogs.map(b => b.title)
+
+  expect(titles).toContain('Another blog')
+})
+
+test('blog count increases', async () => {
+  const initialBlogs = await Blog.find({})
+
+  const newBlog = {
+    title: 'Count test',
+    author: 'Shana Dev',
+    url: 'https://example.com',
+    likes: 2
+  }
+
+  await api.post('/api/blogs').send(newBlog)
+
+  const finalBlogs = await Blog.find({})
+
+  expect(finalBlogs).toHaveLength(initialBlogs.length + 1)
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 
