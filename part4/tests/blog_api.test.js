@@ -190,6 +190,37 @@ test('returns 400 for invalid id', async () => {
     .expect(400)
 })
 
+test('a blog likes can be updated', async () => {
+  const blogsAtStart = await Blog.find({})
+  const blogToUpdate = blogsAtStart[0]
+
+  const updatedData = {
+    ...blogToUpdate.toJSON(),
+    likes: blogToUpdate.likes + 10
+  }
+
+  const response = await api
+    .put(`/api/blogs/${blogToUpdate.id}`)
+    .send(updatedData)
+    .expect(200)
+    .expect('Content-Type', /application\/json/)
+
+  expect(response.body.likes).toBe(blogToUpdate.likes + 10)
+})
+
+test('updated likes are saved in database', async () => {
+  const blogs = await Blog.find({})
+  const blogToUpdate = blogs[0]
+
+  await api
+    .put(`/api/blogs/${blogToUpdate.id}`)
+    .send({ ...blogToUpdate.toJSON(), likes: 999 })
+
+  const updatedBlog = await Blog.findById(blogToUpdate._id)
+
+  expect(updatedBlog.likes).toBe(999)
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 
