@@ -168,6 +168,28 @@ test('invalid blog is not saved', async () => {
   expect(finalBlogs).toHaveLength(initialBlogs.length)
 })
 
+test('a blog can be deleted', async () => {
+  const blogsAtStart = await Blog.find({})
+  const blogToDelete = blogsAtStart[0]
+
+  await api
+    .delete(`/api/blogs/${blogToDelete.id}`)
+    .expect(204)
+
+  const blogsAtEnd = await Blog.find({})
+
+  expect(blogsAtEnd).toHaveLength(blogsAtStart.length - 1)
+
+  const titles = blogsAtEnd.map(b => b.title)
+  expect(titles).not.toContain(blogToDelete.title)
+})
+
+test('returns 400 for invalid id', async () => {
+  await api
+    .delete('/api/blogs/123invalid')
+    .expect(400)
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 
